@@ -4,7 +4,7 @@ int sum = 0;
 
 foreach (int num in numbers)
 {
-    sum += num; // прибавляем каждое число к сумме
+    sum += num; 
 }
 Console.WriteLine("Sum = " + sum);
 
