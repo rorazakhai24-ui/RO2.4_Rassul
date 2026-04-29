@@ -1,0 +1,185 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace StudentRegistryApp
+{
+    public class Student
+    {
+        private static int _nextId = 1; 
+        public int StudentId { get; private set; }
+        public string Name { get; set; }
+        public string Faculty { get; set; }
+
+        private double _gpa;
+        public double GPA
+        {
+            get => _gpa;
+            set
+            {
+                if (value >= 0.0 && value <= 4.0)
+                    _gpa = value;
+                else
+                    throw new ArgumentException("GPA должен быть в диапазоне от 0.0 до 4.0.");
+            }
+        }
+
+        public Student(string name, double gpa, string faculty)
+        {
+            StudentId = _nextId++; 
+            Name = name;
+            GPA = gpa; 
+            Faculty = faculty;
+        }
+
+        public override string ToString()
+        {
+            return $"[ID: {StudentId}] Имя: {Name}, Факультет: {Faculty}, GPA: {GPA:F2}";
+        }
+    }
+
+    public class Registry
+    {
+        private Student[] _students = new Student[100]; 
+        private int _count = 0; 
+
+        public void Add(Student student)
+        {
+            if (_count < 100)
+            {
+                _students[_count] = student;
+                _count++;
+                Console.WriteLine("Студент успешно добавлен.");
+            }
+            else
+            {
+                Console.WriteLine("Ошибка: Реестр заполнен (макс. 100 студентов).");
+            }
+        }
+
+        public Student FindById(int id)
+        {
+            for (int i = 0; i < _count; i++)
+            {
+                if (_students[i].StudentId == id) return _students[i];
+            }
+            return null;
+        }
+
+        public void FindByName(string name)
+        {
+            bool found = false;
+            for (int i = 0; i < _count; i++)
+            {
+                if (_students[i].Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(_students[i]);
+                    found = true;
+                }
+            }
+            if (!found) Console.WriteLine("Студенты с таким именем не найдены.");
+        }
+
+        public void GetTopStudents(int n)
+        {
+            if (_count == 0) { Console.WriteLine("Реестр пуст."); return; }
+
+            var activeStudents = _students.Take(_count).ToList();
+            var top = activeStudents.OrderByDescending(s => s.GPA).Take(n);
+
+            Console.WriteLine($"\n--- ТОП {n} студентов ---");
+            foreach (var s in top) Console.WriteLine(s);
+        }
+
+        public void PrintAll()
+        {
+            if (_count == 0) Console.WriteLine("Реестр пуст.");
+            for (int i = 0; i < _count; i++)
+            {
+                Console.WriteLine(_students[i]);
+            }
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Registry registry = new Registry();
+            bool exit = false;
+
+            while (!exit)
+            {
+                Console.WriteLine("\n=== СИСТЕМА РЕГИСТРАЦИИ СТУДЕНТОВ ===");
+                Console.WriteLine("1. Добавить нового студента");
+                Console.WriteLine("2. Найти студента по ID");
+                Console.WriteLine("3. Найти студентов по имени");
+                Console.WriteLine("4. Показать ТОП-N студентов по GPA");
+                Console.WriteLine("5. Показать всех студентов");
+                Console.WriteLine("6. Выход");
+                Console.Write("Выберите опцию: ");
+
+                string choice = Console.ReadLine();
+
+                if (choice == "1")
+                {
+                    try
+                    {
+                        Console.Write("Введите имя: ");
+                        string name = Console.ReadLine();
+                        Console.Write("Введите GPA (0.0 - 4.0): ");
+                        double gpa = double.Parse(Console.ReadLine());
+                        Console.Write("Введите факультет: ");
+                        string faculty = Console.ReadLine();
+
+                        registry.Add(new Student(name, gpa, faculty));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Ошибка: {ex.Message}");
+                    }
+                }
+                else if (choice == "2")
+                {
+                    Console.Write("Введите ID студента: ");
+                    if (int.TryParse(Console.ReadLine(), out int id))
+                    {
+                        Student s = registry.FindById(id);
+                        if (s != null) Console.WriteLine(s);
+                        else Console.WriteLine("Студент с таким ID не найден.");
+                    }
+                    else Console.WriteLine("Некорректный формат ID.");
+                }
+                else if (choice == "3")
+                {
+                    Console.Write("Введите имя для поиска: ");
+                    string name = Console.ReadLine();
+                    registry.FindByName(name);
+                }
+                else if (choice == "4")
+                {
+                    Console.Write("Введите количество (N): ");
+                    if (int.TryParse(Console.ReadLine(), out int n))
+                    {
+                        registry.GetTopStudents(n);
+                    }
+                    else Console.WriteLine("Некорректное число.");
+                }
+                else if (choice == "5")
+                {
+                    Console.WriteLine("\n--- Список всех студентов ---");
+                    registry.PrintAll();
+                }
+                else if (choice == "6")
+                {
+                    Console.WriteLine("Программа завершена.");
+                    exit = true;
+                }
+                else
+                {
+                    Console.WriteLine("Неверный выбор. Пожалуйста, введите число от 1 до 6.");
+                }
+            }
+        }
+    }
+}
